@@ -50,8 +50,9 @@ function translateModelName(model: string): string {
   // Subagent requests use a specific model number which Copilot doesn't support
   if (model.startsWith("claude-sonnet-4-")) {
     return model.replace(/^claude-sonnet-4-.*/, "claude-sonnet-4")
-  } else if (model.startsWith("claude-opus-")) {
-    return model.replace(/^claude-opus-4-.*/, "claude-opus-4")
+  } else if (model.startsWith("claude-opus-4-")) {
+    // claude-opus-4-6 → claude-opus-4.6 (Anthropic uses dashes, Copilot uses dots)
+    return model.replace(/^claude-opus-4-(.+)/, "claude-opus-4.$1")
   }
   return model
 }
