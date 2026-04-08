@@ -18,6 +18,7 @@ export async function handleCompletion(c: Context) {
   await checkRateLimit(state)
 
   let payload = await c.req.json<ChatCompletionsPayload>()
+  consola.info("Model:", payload.model)
   consola.debug("Request payload:", JSON.stringify(payload).slice(-400))
 
   // Find the selected model
@@ -39,12 +40,16 @@ export async function handleCompletion(c: Context) {
 
   if (state.manualApprove) await awaitApproval()
 
-  if (isNullish(payload.max_tokens)) {
-    payload = {
-      ...payload,
-      max_tokens: selectedModel?.capabilities.limits.max_output_tokens,
-    }
-    consola.debug("Set max_tokens to:", JSON.stringify(payload.max_tokens))
+  if (
+    isNullish(payload.max_tokens)
+    && isNullish(payload.max_completion_tokens)
+  ) {
+    const defaultMaxTokens =
+      selectedModel?.capabilities.limits.max_output_tokens
+    const tokenField =
+      payload.model === "gpt-5.4" ? "max_completion_tokens" : "max_tokens"
+    payload = { ...payload, [tokenField]: defaultMaxTokens }
+    consola.debug(`Set ${tokenField} to:`, JSON.stringify(defaultMaxTokens))
   }
 
   const response = await createChatCompletions(payload)

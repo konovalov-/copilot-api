@@ -12,11 +12,12 @@ state.accountType = "individual"
 
 // Helper to mock fetch
 const fetchMock = mock(
-  (_url: string, opts: { headers: Record<string, string> }) => {
+  (_url: string, opts: { headers: Record<string, string>; body?: string }) => {
     return {
       ok: true,
       json: () => ({ id: "123", object: "chat.completion", choices: [] }),
       headers: opts.headers,
+      body: opts.body,
     }
   },
 )
@@ -53,4 +54,22 @@ test("sets X-Initiator to user if only user present", async () => {
     fetchMock.mock.calls[1][1] as { headers: Record<string, string> }
   ).headers
   expect(headers["X-Initiator"]).toBe("user")
+})
+
+test("converts max_tokens to max_completion_tokens for gpt-5.4", async () => {
+  const payload: ChatCompletionsPayload = {
+    messages: [{ role: "user", content: "hi" }],
+    model: "gpt-5.4",
+    max_tokens: 256,
+  }
+
+  await createChatCompletions(payload)
+
+  const request = fetchMock.mock.calls[2][1] as {
+    body?: string
+  }
+  const sentPayload = JSON.parse(request.body ?? "{}") as ChatCompletionsPayload
+
+  expect(sentPayload.max_tokens).toBeUndefined()
+  expect(sentPayload.max_completion_tokens).toBe(256)
 })

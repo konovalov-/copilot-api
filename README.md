@@ -23,6 +23,11 @@
 
 **Note:** If you are using [opencode](https://github.com/sst/opencode), you do not need this project. Opencode supports GitHub Copilot provider out of the box.
 
+> [!NOTE]
+> This repository is the `konovalov-/copilot-api` fork of [ericc-ch/copilot-api](https://github.com/ericc-ch/copilot-api).
+> The published `copilot-api` npm package and the public usage viewer currently belong to the upstream project, not this fork.
+> If you are using this fork directly, prefer the source and Docker workflows documented below.
+
 ---
 
 ## Project Overview
@@ -116,9 +121,9 @@ The Docker image includes:
 - Health check for container monitoring
 - Pinned base image version for reproducible builds
 
-## Using with npx
+## Using the Upstream npm Package
 
-You can run the project directly using npx:
+The upstream project publishes `copilot-api` to npm, so these commands run the upstream package rather than this fork:
 
 ```sh
 npx copilot-api@latest start
@@ -259,7 +264,7 @@ npx copilot-api@latest start --proxy-env
 
 ## Using the Usage Viewer
 
-After starting the server, a URL to the Copilot Usage Dashboard will be displayed in your console. This dashboard is a web interface for monitoring your API usage.
+After starting the server, a URL to the Copilot Usage Dashboard will be displayed in your console. In this fork, that URL currently points to the upstream static dashboard hosted at `ericc-ch.github.io`, because `konovalov-/copilot-api` does not currently publish its own GitHub Pages copy. The dashboard is static and works with this fork's `/usage` endpoint.
 
 1.  Start the server. For example, using npx:
     ```sh

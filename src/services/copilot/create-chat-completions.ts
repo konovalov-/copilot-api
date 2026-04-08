@@ -10,7 +10,9 @@ export const createChatCompletions = async (
 ) => {
   if (!state.copilotToken) throw new Error("Copilot token not found")
 
-  const enableVision = payload.messages.some(
+  const requestPayload = normalizeChatCompletionsPayload(payload)
+
+  const enableVision = requestPayload.messages.some(
     (x) =>
       typeof x.content !== "string"
       && x.content?.some((x) => x.type === "image_url"),
@@ -18,7 +20,7 @@ export const createChatCompletions = async (
 
   // Agent/user check for X-Initiator header
   // Determine if any message is from an agent ("assistant" or "tool")
-  const isAgentCall = payload.messages.some((msg) =>
+  const isAgentCall = requestPayload.messages.some((msg) =>
     ["assistant", "tool"].includes(msg.role),
   )
 
@@ -31,7 +33,7 @@ export const createChatCompletions = async (
   const response = await fetch(`${copilotBaseUrl(state)}/chat/completions`, {
     method: "POST",
     headers,
-    body: JSON.stringify(payload),
+    body: JSON.stringify(requestPayload),
   })
 
   if (!response.ok) {
@@ -39,11 +41,25 @@ export const createChatCompletions = async (
     throw new HTTPError("Failed to create chat completions", response)
   }
 
-  if (payload.stream) {
+  if (requestPayload.stream) {
     return events(response)
   }
 
   return (await response.json()) as ChatCompletionResponse
+}
+
+function normalizeChatCompletionsPayload(
+  payload: ChatCompletionsPayload,
+): ChatCompletionsPayload {
+  if (payload.model !== "gpt-5.4" || payload.max_tokens === null) {
+    return payload
+  }
+
+  const { max_tokens, ...rest } = payload
+  return {
+    ...rest,
+    max_completion_tokens: payload.max_completion_tokens ?? max_tokens,
+  }
 }
 
 // Streaming types
@@ -130,6 +146,7 @@ export interface ChatCompletionsPayload {
   temperature?: number | null
   top_p?: number | null
   max_tokens?: number | null
+  max_completion_tokens?: number | null
   stop?: string | Array<string> | null
   n?: number | null
   stream?: boolean | null
